@@ -13,17 +13,19 @@ class GroceryItem(dynamoDB.DynamoItem):
         assert('Size' in data)
         assert(isinstance(data['Size'],float) or isinstance(data['Size'],int) or isinstance(data['Size'],decimal.Decimal))
         assert('Unit' in data and data['Unit'] in UNITS)
+        assert('Locations' in data and isinstance(data['Locations'],list))
         if 'CollectionGroup' in data:
             assert(isinstance(data['CollectionGroup'],str))
         if 'Taxable' in data:
             assert(isinstance(data['Taxable'],Boolean))
-    def fromValues(table,Group,Barcode,Name,Manufacturer,Size,Unit,ItemCollection=None,Taxable=False):
+    def fromValues(table,Group,Barcode,Name,Manufacturer,Size,Unit,Locations,ItemCollection=None,Taxable=False):
         data = {'ID': str( uuid.uuid5(uuid.NAMESPACE_OID, "\t".join([Group,Name,Manufacturer,str(Size),Unit])) ),
                 'Group': Group,
                 'Name': Name,
                 'Manufacturer': Manufacturer,
                 'Size' : Size,
                 'Unit' : Unit,
+                'Locations' : Locations
                }
         if Barcode: data['Barcode']=Barcode
         if ItemCollection: data['ItemCollection']=ItemCollection
@@ -139,17 +141,6 @@ class GroceryGroup(dynamoDB.DynamoItem):
         return(GroceryGroup(table,data))
 
 if __name__ == "__main__":
-    newtable = dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Items','ID',GroceryItem)
-    GroceryItem.fromValues(newtable,'nwalsh','01354321','Fresh Strawberries','Wishart Farms',2,'lb','Strawberries').save()
-    GroceryItem.fromValues(newtable,'nwalsh','01354323','Fresh Strawberries','Dole',1,'lb','Strawberries').save()
-    GroceryItem.fromValues(newtable,'nwalsh','01354322','Turkey sliced Ultra thin','Wellesley Farms',3,'lb','Turkey, sliced').save()
-    GroceryItem.fromValues(newtable,'nwalsh','01354324','Strawberry Preserves',"Smucker's",18,'oz','Strawberries').save()
-    myget=newtable.get("nwalsh\tFresh Strawberries\tDole\t1\tlb",toBeHashed=True)
-    myget.set('Barcode','0123214')
-    #myget.set('ItemCollection','Fruit')
-    print(myget)
-    #newtable.delete()
-
     newtable = dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Areas','ID', GroceryArea)
     GroceryArea.fromValues(newtable,'nwalsh','Home','Fridge',1).save()
     GroceryArea.fromValues(newtable,'nwalsh','Home','Cabinets',2).save()
@@ -157,6 +148,17 @@ if __name__ == "__main__":
     GroceryArea.fromValues(newtable,'nwalsh',"BJ's",'Meats and Yogurt',5).save()
     GroceryArea.fromValues(newtable,'nwalsh','Stop and Shop','Fruits and Veggies',1).save()
     GroceryArea.fromValues(newtable,'nwalsh','Stop and Shop','Bread',4).save()
+
+    newtable = dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Items','ID',GroceryItem)
+    GroceryItem.fromValues(newtable,'nwalsh','01354321','Fresh Strawberries','Wishart Farms',2,'lb',['Home - Fridge','BJs Fruits','Stopand Shop fruits'],'Strawberries').save()
+    GroceryItem.fromValues(newtable,'nwalsh','01354323','Fresh Strawberries','Dole',1,'lb',[],'Strawberries').save()
+    GroceryItem.fromValues(newtable,'nwalsh','01354322','Turkey sliced Ultra thin','Wellesley Farms',3,'lb',[],'Turkey, sliced').save()
+    GroceryItem.fromValues(newtable,'nwalsh','01354324','Strawberry Preserves',"Smucker's",18,'oz',[],'Strawberries').save()
+    myget=newtable.get("nwalsh\tFresh Strawberries\tDole\t1\tlb",toBeHashed=True)
+    myget.set('Barcode','0123214')
+    #myget.set('ItemCollection','Fruit')
+    print(myget)
+    #newtable.delete()
 
     newtable = dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Lists','ID', GroceryList)
     GroceryList.fromValues(newtable,'nwalsh','2018-01-18 9:12 AM','Strawberries').save()
