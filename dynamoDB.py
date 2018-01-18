@@ -27,7 +27,7 @@ class DynamoItem():
         self.table=table
         if valueToHash and valueToHash in data:
             #print("DynamoItem.__init: ",data[valueToHash])
-            data[table.hash_key]=str( uuid.uuid3(uuid.NAMESPACE_OID, data[valueToHash]) )
+            data[table.hash_key]=str( uuid.uuid5(uuid.NAMESPACE_OID, data[valueToHash]) )
             #print("                 : ",data[table.hash_key])
         self.validate(data)
         self.__data__ = data
@@ -44,9 +44,9 @@ class DynamoItem():
     def save(self,overwrite=True):
         if overwrite==False:
             print("TODO: save with overwrite false not implemented")
-            self.__data__['Updated']=datetime.datetime.now()
+            self.__data__['Updated']=str(datetime.datetime.now())
             self.__data__['Created']=self.__data__['Updated']
-        self.__data__['Updated']=datetime.datetime.now()
+        self.__data__['Updated']=str(datetime.datetime.now())
         print(self.__data__)
         response=self.table.table.put_item( Item=self.__data__ )
         return(response)
@@ -95,7 +95,7 @@ class SimpleDynamoTable():
         self.table.delete()
     def get(self,hash_value,toBeHashed=False):
         #print("DynamoTable.get: ", hash_value, toBeHashed)
-        if toBeHashed: hash_value=str( uuid.uuid3(uuid.NAMESPACE_OID, hash_value) )
+        if toBeHashed: hash_value=str( uuid.uuid5(uuid.NAMESPACE_OID, hash_value) )
         #print("               : ", hash_value)
         try:
             response = self.table.get_item( Key={self.hash_key:hash_value} )
@@ -126,7 +126,7 @@ if __name__ == '__main__':
 
 def updateMovie(title,year):
     try:
-        titlehash = str(uuid.uuid3(uuid.NAMESPACE_OID, title+str(year)))
+        titlehash = str(uuid.uuid5(uuid.NAMESPACE_OID, title+str(year)))
         response = table.update_item(
             Key = {'titlehash':titlehash},
             UpdateExpression = "set info.rating = :r, info.plot = :p, info.actors = :a",
@@ -164,7 +164,7 @@ def updateMovie2(title,year):
     print("Attempting to update an item")
     print("It should just remove first actor, but removing everything but second actor incl plot and rating.  WHY?")
     try:
-        titlehash = str(uuid.uuid3(uuid.NAMESPACE_OID, title+str(year)))
+        titlehash = str(uuid.uuid5(uuid.NAMESPACE_OID, title+str(year)))
         response = table.update_item(
             #Key = {'year':year, 'title':title},
             Key = {'titlehash':titlehash},
@@ -184,7 +184,7 @@ def updateMovie2(title,year):
 #updateMovie2('Hulk',1999)
 
 def deleteMovie(title,year):
-    titlehash = str(uuid.uuid3(uuid.NAMESPACE_OID, title+str(year)))
+    titlehash = str(uuid.uuid5(uuid.NAMESPACE_OID, title+str(year)))
     print("Remove this movie if rating less than 5")
     try:
         response = table.delete_item(
