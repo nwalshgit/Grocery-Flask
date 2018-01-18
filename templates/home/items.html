@@ -1,0 +1,39 @@
+<!-- app/templates/home/items.html -->
+
+{% extends "base.html" %}
+{% block title %}Items{% endblock %}
+{% block body %}
+  {% if itemcollections %}
+          <hr class="intro-divider">
+            <table class="table table-striped table-bordered">
+              <tbody>
+    {% for location in itemcollections %}
+                <tr class="location">
+                  <th class="location" width="85%"> {{ location.name }} </th>
+                  <th width="15%"> </th>
+                </tr>  
+      {% if location['items'] %}
+      {% for item in location['items'] %}
+                <tr>
+                  <td><a href='choose_item_of_itemcollection'> 
+        {% if item.needed %}
+           +
+        {% endif %}
+                          {{ item.name }} 
+                      </a></td>
+                  <td> </td>
+                </tr>
+      {% endfor %}
+      {% endif %}
+    {% endfor %}
+              </tbody>
+            </table>
+  {% else %}
+            <h3> No items have been added. </h3>
+            <hr class="intro-divider">
+  {% endif %}
+          <a href="{i{ url_for('home.add_item') }i}" class="btn btn-default btn-lg">
+            <i class="fa fa-plus"></i>
+            Add Item
+          </a>
+{% endblock %}

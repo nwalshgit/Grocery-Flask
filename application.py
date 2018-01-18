@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 
 # print a nice greeting.
 def say_hello(username = "World"):
@@ -23,8 +23,22 @@ application.add_url_rule('/', 'index', (lambda: header_text +
 
 # add a rule when the page is accessed with a location appended to the site
 # URL.
-application.add_url_rule('/<location>', 'hello', (lambda location:
-    header_text + say_hello(location) + home_link + footer_text))
+#application.add_url_rule('/<location>', 'hello', (lambda location:
+#    header_text + say_hello(location) + home_link + footer_text))
+
+@application.route('/planning', methods=['GET'])
+def list_itemcollections_home():
+    """list all of the itemcollections in home, grouped and sorted by area""" 
+    #TODO GroceryItem is missing locations
+    current_user='nwalsh'
+    itemcollections=[{'name':'Home - Fridge',  
+                      'items':[{'name':'Strawberries','needed':True},
+                               {'name':'Turkey, sliced','needed':False}]},
+                      {'name':'Home - Cabinets',
+                       'items':[{'name':'','needed':False}]},
+                    ]
+    return(render_template('home/items.html',title='Planning', current_user=current_user,
+                           itemcollections=itemcollections))
 
 # run the app.
 if __name__ == "__main__":
