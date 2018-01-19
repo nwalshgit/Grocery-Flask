@@ -47,9 +47,9 @@ class DynamoItem():
             self.__data__['Updated']=str(datetime.datetime.now())
             self.__data__['Created']=self.__data__['Updated']
         self.__data__['Updated']=str(datetime.datetime.now())
-        print(self.__data__)
+        #print(self.__data__)
         response=self.table.table.put_item( Item=self.__data__ )
-        return(response)
+        return(self.__data__['ID'])
 
 class SimpleDynamoTable():
     """DynamoDB Table with 'hash_key' as a string hash_key and no range_key"""
@@ -111,6 +111,32 @@ class SimpleDynamoTable():
             else:
                 print("GetItem failed",response)
         return(None) 
+    def scan(self,fe,eav,pe,ean):
+        items=[]
+        response = self.table.scan(
+            FilterExpression = fe,
+            ExpressionAttributeValues = eav,
+            ProjectionExpression = pe,
+            ExpressionAttributeNames = ean,
+        )
+        while True:
+            #do action on each item of the "page"
+            for item in response[u'Items']:
+                #items.append(json.dumps(item, cls=DecimalEncoder))
+                items.append(item)
+                print("Item:",item)
+            #If more data then read another "page", otherwise we are done
+            if response.get('LastEvaluatedKey'):
+                response = table.scan(
+                    FilterExpression = filter_expression,
+                    ExpressionAttributeValues = expression_attribute_values,
+                    ProjectionExpression = projection_expression,
+                    ExpressionAttributeNames = expression_attribute_names,
+                    ExclusiveStartKey = exclusive_start_key
+                )
+            else:
+                break
+        return(items)
 
 if __name__ == '__main__':
     print('Test')
