@@ -1,8 +1,32 @@
+import boto3, json
 from flask import Flask, render_template
+import dynamoDB, GroceryDB
+
+dynamodb = boto3.resource('dynamodb',region_name='us-east-2')
+tables = {'Items':dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Items','ID', GroceryDB.GroceryItem),
+          'Areas':dynamodb.Table('GroceryFlaskApp-WebEnv-Areas'),
+          'Lists':dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Lists','ID', GroceryDB.GroceryList),
+          'Users':dynamodb.Table('GroceryFlaskApp-WebEnv-Users'),}
+
+def getItemCollections(Group='nwalsh'):
+    table=tables['Items']
+    filter_expression = "#Gr = :g"
+    expression_attribute_names = {"#Gr": "Group", }
+    projection_expression = "ItemCollection, CollectionGroup, Locations, Taxable, Needed"
+    expression_attribute_values = {':g': 'nwalsh'}
+    items = table.scan(filter_expression, expression_attribute_values,
+                       projection_expression, expression_attribute_names)
+    locationdict={}
+    for item in items:
+        for location in item['Locations']:
+            if location not in locationdict: 
+                locationdict[location]={}
+            locationdict[location][item['ItemCollection']]=True
+    return(locationdict);
 
 # print a nice greeting.
 def say_hello(username = "World"):
-    return '<p>Hello %s!</p>\n' % username
+    return(str(getItemCollections())+'<p>Hello %s!</p>\n' % username)
 
 # some bits of text for the page.
 header_text = '''
