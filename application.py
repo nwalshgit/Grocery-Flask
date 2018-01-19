@@ -4,29 +4,39 @@ import dynamoDB, GroceryDB
 
 dynamodb = boto3.resource('dynamodb',region_name='us-east-2')
 tables = {'Items':dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Items','ID', GroceryDB.GroceryItem),
-          'Areas':dynamodb.Table('GroceryFlaskApp-WebEnv-Areas'),
-          'Lists':dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Lists','ID', GroceryDB.GroceryList),
-          'Users':dynamodb.Table('GroceryFlaskApp-WebEnv-Users'),}
+          'Groups':dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Groups','ID', GroceryDB.GroceryGroup),
+          'Users':dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Users','ID', GroceryDB.GroceryUser),
+          'Areas':dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Areas','ID', GroceryDB.GroceryArea),
+         }
 
-def getItemCollections(Group='nwalsh'):
-    table=tables['Items']
-    filter_expression = "#Gr = :g"
-    expression_attribute_names = {"#Gr": "Group", }
-    projection_expression = "ItemCollection, CollectionGroup, Locations, Taxable, Needed"
-    expression_attribute_values = {':g': 'nwalsh'}
-    items = table.scan(filter_expression, expression_attribute_values,
-                       projection_expression, expression_attribute_names)
+def itemsToLocationDict(items):
     locationdict={}
     for item in items:
         for location in item['Locations']:
             if location not in locationdict: 
                 locationdict[location]={}
-            locationdict[location][item['ItemCollection']]=True
+            locationdict[location][item['ItemGroup']]=True
     return(locationdict);
+
+
+def getItemCollections(Group='nwalsh'):
+    table=tables['Items']
+    filter_expression = "UserGroup = :g"
+    #expression_attribute_names = {"#Gr": "Group", }
+    projection_expression = "ItemGroup, Locations, Taxable, Needed"
+    expression_attribute_values = {':g': 'nwalsh'}
+    items = table.scan(filter_expression, expression_attribute_values,
+                       projection_expression)
+    return(items)
+
+def makeFirstList(Group='nwalsh'):
+    items = getItemCollections(Group)
+    for item in items:
+        GroceryDB.GroceryList(tables['List'],Group,'0',item).save()
 
 # print a nice greeting.
 def say_hello(username = "World"):
-    return(str(getItemCollections())+'<p>Hello %s!</p>\n' % username)
+    return(str(itemsToLocationDict(getItemCollections()))+'<p>Hello %s!</p>\n' % username)
 
 # some bits of text for the page.
 header_text = '''
