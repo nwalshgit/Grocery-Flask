@@ -111,31 +111,60 @@ class SimpleDynamoTable():
             else:
                 print("GetItem failed",response)
         return(None) 
-    def scan(self,fe,eav,pe,ean):
+    def scan(self,fe,eav,pe,ean=None):
+        ScannedCount=0
         items=[]
-        response = self.table.scan(
-            FilterExpression = fe,
-            ExpressionAttributeValues = eav,
-            ProjectionExpression = pe,
-            ExpressionAttributeNames = ean,
-        )
-        while True:
-            #do action on each item of the "page"
-            for item in response[u'Items']:
-                #items.append(json.dumps(item, cls=DecimalEncoder))
-                items.append(item)
-                print("Item:",item)
-            #If more data then read another "page", otherwise we are done
-            if response.get('LastEvaluatedKey'):
-                response = table.scan(
-                    FilterExpression = filter_expression,
-                    ExpressionAttributeValues = expression_attribute_values,
-                    ProjectionExpression = projection_expression,
-                    ExpressionAttributeNames = expression_attribute_names,
-                    ExclusiveStartKey = exclusive_start_key
-                )
-            else:
-                break
+        if ean:
+            response = self.table.scan(
+                FilterExpression = fe,
+                ExpressionAttributeValues = eav,
+                ProjectionExpression = pe,
+                ExpressionAttributeNames = ean,
+            )
+            ScannedCount+=response['ScannedCount']
+            while True:
+                #do action on each item of the "page"
+                for item in response[u'Items']:
+                    #items.append(json.dumps(item, cls=DecimalEncoder))
+                    items.append(item)
+                    #print("TableScan:",item)
+                #If more data then read another "page", otherwise we are done
+                if response.get('LastEvaluatedKey'):
+                    response = table.scan(
+                        FilterExpression = filter_expression,
+                        ExpressionAttributeValues = expression_attribute_values,
+                        ProjectionExpression = projection_expression,
+                        ExpressionAttributeNames = expression_attribute_names,
+                        ExclusiveStartKey = exclusive_start_key
+                    )
+                    ScannedCount+=response['ScannedCount']
+                else:
+                    break
+        else:
+            response = self.table.scan(
+                FilterExpression = fe,
+                ExpressionAttributeValues = eav,
+                ProjectionExpression = pe,
+            )
+            ScannedCount+=response['ScannedCount']
+            while True:
+                #do action on each item of the "page"
+                for item in response[u'Items']:
+                    #items.append(json.dumps(item, cls=DecimalEncoder))
+                    items.append(item)
+                    #print("Item:",item)
+                #If more data then read another "page", otherwise we are done
+                if response.get('LastEvaluatedKey'):
+                    response = table.scan(
+                        FilterExpression = filter_expression,
+                        ExpressionAttributeValues = expression_attribute_values,
+                        ProjectionExpression = projection_expression,
+                        ExclusiveStartKey = exclusive_start_key
+                    )
+                    ScannedCount+=response['ScannedCount']
+                else:
+                    break
+        print("SimpleDynamoTable Warning:",ScannedCount,"rows scanned.")
         return(items)
 
 if __name__ == '__main__':
