@@ -67,15 +67,16 @@ class GroceryItem(dynamoDB.DynamoItem):
 class GroceryArea(dynamoDB.DynamoItem):
     def validate(self,data):
         super().validate(data)
-        assert('Group' in data and isinstance(data['Group'],str))
-        assert('Location' in data and isinstance(data['Group'],str))
-        assert('Name' in data and isinstance(data['Group'],str))
-        assert('Order' in data and isinstance(data['Group'],str))
-    def fromValues(table,Group,Location,Name,Order):
-        data = {'ID': str( uuid.uuid5(uuid.NAMESPACE_OID, '\t'.join([Group,Location,Name])) ),
-                'Group': Group,
-                'Location': Location,
-                'Name': Name,
+        assert('UserGroup' in data and isinstance(data['UserGroup'],str))
+        assert('Building' in data and isinstance(data['Building'],str))
+        assert('Bay' in data and isinstance(data['Bay'],str))
+        assert('Order' in data)
+        assert(isinstance(data['Order'],int) or isinstance(data['Order'],decimal.Decimal))
+    def fromValues(table,UserGroup,Building,Bay,Order):
+        data = {'ID': str( uuid.uuid5(uuid.NAMESPACE_OID, '\t'.join([UserGroup,Building,Bay])) ),
+                'UserGroup': UserGroup,
+                'Building': Building,
+                'Bay': Bay,
                 'Order': Order
                }
         return(GroceryArea(table,data))
