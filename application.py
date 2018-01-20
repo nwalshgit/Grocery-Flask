@@ -9,25 +9,54 @@ tables = {'Items':dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Items','ID'
           'Areas':dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Areas','ID', GroceryDB.GroceryArea),
          }
 
-def itemsToLocationDict(items):
-    locationdict={}
-    for item in items:
-        for location in item['Locations']:
-            if location not in locationdict: 
-                locationdict[location]={}
-            locationdict[location][item['ItemGroup']]=True
-    return(locationdict);
-
-
-def getItemCollections(Group='nwalsh'):
-    table=tables['Items']
+def getLocationJSON(UserGroup):
+    '''{"ID":"Location - Area",} '''
+    location_dict = {}
     filter_expression = "UserGroup = :g"
+    projection_expression = "ID, Building, Bay, SortOrder"
+    expression_attribute_values = {':g': UserGroup}
+    #expression_attribute_names = {"#Lo": "Location", }
+    locations = tables['Areas'].scan(filter_expression, expression_attribute_values, 
+                       projection_expression)
+    #print("getLocationDict:",locations)
+    for location in locations: #TODO sort by Building and then Order
+        location_dict[location['ID']] = {'Building': location['Building'],
+                                         'Bay': location['Bay'],
+                                         'SortOrder': location['SortOrder']}
+    #print("getLocationDict:",location_dict)
+    return(location_dict)
+
+def getItemGroupsJSON(UserGroup):
+    table=tables['Items']
+    filter_expression = "UserGroup = :g and NOT (ItemStatus = :s)"
     #expression_attribute_names = {"#Gr": "Group", }
-    projection_expression = "ItemGroup, Locations, Taxable, Needed"
-    expression_attribute_values = {':g': 'nwalsh'}
+    projection_expression = "ItemGroup, Locations, Taxable, ItemStatus"
+    expression_attribute_values = {':g': UserGroup, ':s': 'Discontinued'}
     items = table.scan(filter_expression, expression_attribute_values,
                        projection_expression)
     return(items)
+
+def getItemGroupsByLocation(UserGroup):
+    items=getItemGroupsJSON(UserGroup)
+    #print("items:",items)
+    locations=getLocationJSON(UserGroup)
+    #print("locations:",locations)
+    for item in items:
+        for location in item['Locations']:
+            #if location not in locations:  #TODO this should never happen, check that it doesnt 
+            #    locations[location]={}
+            if 'Items' not in locations[location]:
+                locations[location]['Items']={}
+            locations[location]['Items'][item['ItemGroup']]=''
+    return(locations);
+
+def getItemGroupsBySortedLocation(UserGroup):
+    locations=[]
+    locationJSON=getItemGroupsByLocation(UserGroup)
+    for key,value in sorted(locationJSON.items(), key=lambda item: (item[1]['Building'], item[1]['SortOrder'], item[0])):
+        if 'Items' not in value: value['Items']=[]
+        locations.append(["%s - %s"%(value['Building'],value['Bay']),value['Items']])
+    return(locations)
 
 def makeFirstList(Group='nwalsh'):
     items = getItemCollections(Group)
@@ -36,7 +65,8 @@ def makeFirstList(Group='nwalsh'):
 
 # print a nice greeting.
 def say_hello(username = "World"):
-    return(str(itemsToLocationDict(getItemCollections()))+'<p>Hello %s!</p>\n' % username)
+    #return(str(itemsToLocationDict(getItemCollections()))+'<p>Hello %s!</p>\n' % username)
+    return(str(getItemGroupsBySortedLocation('nwalsh'))+'<p>Hello %s!</p>\n' % username)
 
 # some bits of text for the page.
 header_text = '''
