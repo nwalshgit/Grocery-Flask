@@ -21,8 +21,8 @@ class GroceryItem(dynamoDB.DynamoItem):
         assert('Manufacturer' in data and isinstance(data['Manufacturer'],str))
         if 'Taxable' in data:
             assert(isinstance(data['Taxable'],float) or isinstance(data['Taxable'],decimal.Decimal))
-        if 'Status' in data:
-            assert(data['Status'] in ITEMSTATUS)
+        if 'ItemStatus' in data:
+            assert(data['ItemStatus'] in ITEMSTATUS)
         if 'ListDate' in data:
             assert(isinstance(data['ListDate'],str)) #TODO make sure it is a dattime in str format
         if 'Home' in data:
@@ -31,7 +31,7 @@ class GroceryItem(dynamoDB.DynamoItem):
             assert(isinstance(data['Barcode'],str))
         if 'Fees' in data:
             assert(isinstance(data['Fees'],float) or isinstance(data['Fees'],int) or isinstance(data['Fees'],decimal.Decimal))
-    def fromValues(table,UserGroup,Name,PkgPrice,Size,Unit,Locations,ItemGroup,Manufacturer,Taxable=False,Status=False,ListDate=False,Home=False,Barcode=False,Fees=False):
+    def fromValues(table,UserGroup,Name,PkgPrice,Size,Unit,Locations,ItemGroup,Manufacturer,Taxable=False,ItemStatus=False,ListDate=False,Home=False,Barcode=False,Fees=False):
         data = {'ID': str( uuid.uuid4() ),
                 'UserGroup': UserGroup,
                 'Name': Name,
@@ -43,7 +43,7 @@ class GroceryItem(dynamoDB.DynamoItem):
                 'Manufacturer': Manufacturer,
                }
         if Taxable: data['Taxable']=0.06125  #only define if it is taxable
-        if Status : data['Status']=Status
+        if ItemStatus : data['ItemStatus']=ItemStatus
         if ListDate : data['ListDate']=ListDate
         if Home : data['Home']=True
         if Barcode: data['Barcode']=Barcode
@@ -70,14 +70,14 @@ class GroceryArea(dynamoDB.DynamoItem):
         assert('UserGroup' in data and isinstance(data['UserGroup'],str))
         assert('Building' in data and isinstance(data['Building'],str))
         assert('Bay' in data and isinstance(data['Bay'],str))
-        assert('Order' in data)
-        assert(isinstance(data['Order'],int) or isinstance(data['Order'],decimal.Decimal))
-    def fromValues(table,UserGroup,Building,Bay,Order):
+        assert('SortOrder' in data)
+        assert(isinstance(data['SortOrder'],int) or isinstance(data['SortOrder'],decimal.Decimal))
+    def fromValues(table,UserGroup,Building,Bay,SortOrder):
         data = {'ID': str( uuid.uuid5(uuid.NAMESPACE_OID, '\t'.join([UserGroup,Building,Bay])) ),
                 'UserGroup': UserGroup,
                 'Building': Building,
                 'Bay': Bay,
-                'Order': Order
+                'SortOrder': SortOrder
                }
         return(GroceryArea(table,data))
 
