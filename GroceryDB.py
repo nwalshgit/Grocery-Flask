@@ -172,7 +172,7 @@ if __name__ == "__main__":
     GroceryItem.fromValues(itemtable,usergroup,'Fresh Strawberries',0.0,2,'lb',[hf,bf,sf],'Strawberries',"Wishart Farms",Home=True,Barcode='012345').save()
     GroceryItem.fromValues(itemtable,usergroup,'Fresh Strawberries',0.0,1,'lb',[hf,bf,sf],'Strawberries',"Dole",Home=True).save()
     GroceryItem.fromValues(itemtable,usergroup,'Turkey sliced Ultra thin',0.0,3,'lb',[hf,bm,sd],'Turkey, sliced',"Wellesley Farms",Home=True).save()
-    i1=GroceryItem.fromValues(itemtable,usergroup,'Strawberry Preserves',0.0,18,'oz',[hf,bf,sf],'Strawberries',"Smucker's",Home=True).save()
+    i1=GroceryItem.fromValues(itemtable,usergroup,'Strawberry Preserves',0.0,18,'oz',[hf,bf,sf],'Strawberries',"Smucker's",Home=True,ItemStatus='Needed').save()
 
     print(i1)
     myget=itemtable.get(i1)

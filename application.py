@@ -47,7 +47,18 @@ def getItemGroupsByLocation(UserGroup):
             #    locations[location]={}
             if 'Items' not in locations[location]:
                 locations[location]['Items']={}
-            locations[location]['Items'][item['ItemGroup']]=''
+            if 'ItemStatus' not in item:
+                item['ItemStatus']=''
+            if item['ItemGroup'] not in locations[location]['Items']:
+                locations[location]['Items'][item['ItemGroup']]={}
+                locations[location]['Items'][item['ItemGroup']]['ItemStatus']=''
+            print(locations[location]['Items'][item['ItemGroup']])
+            if item['ItemStatus']=='Needed' or \
+               locations[location]['Items'][item['ItemGroup']]['ItemStatus']=='Needed':
+                    locations[location]['Items'][item['ItemGroup']]['ItemStatus']='Needed'
+            elif item['ItemStatus']=='Discontinued' or \
+               locations[location]['Items'][item['ItemGroup']]['ItemStatus']=='Discontinued':
+                    locations[location]['Items'][item['ItemGroup']]['ItemStatus']='Discontinued'
     return(locations);
 
 def getItemGroupsBySortedLocation(UserGroup):
