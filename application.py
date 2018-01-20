@@ -52,7 +52,7 @@ def getItemGroupsByLocation(UserGroup):
             if item['ItemGroup'] not in locations[location]['Items']:
                 locations[location]['Items'][item['ItemGroup']]={}
                 locations[location]['Items'][item['ItemGroup']]['ItemStatus']=''
-            print(locations[location]['Items'][item['ItemGroup']])
+            #print(locations[location]['Items'][item['ItemGroup']])
             if item['ItemStatus']=='Needed' or \
                locations[location]['Items'][item['ItemGroup']]['ItemStatus']=='Needed':
                     locations[location]['Items'][item['ItemGroup']]['ItemStatus']='Needed'
@@ -104,16 +104,11 @@ application.add_url_rule('/', 'index', (lambda: header_text +
 @application.route('/planning', methods=['GET'])
 def list_itemcollections_home():
     """list all of the itemcollections in home, grouped and sorted by area""" 
-    #TODO GroceryItem is missing locations
+    UserGroup='nwalsh'
     current_user='nwalsh'
-    itemcollections=[{'name':'Home - Fridge',  
-                      'items':[{'name':'Strawberries','needed':True},
-                               {'name':'Turkey, sliced','needed':False}]},
-                      {'name':'Home - Cabinets',
-                       'items':[{'name':'','needed':False}]},
-                    ]
-    return(render_template('home/items.html',title='Planning', current_user=current_user,
-                           itemcollections=itemcollections))
+    return(render_template('home/items.html',title='Planning', 
+                           current_user=current_user, UserGroup=UserGroup,
+                           itemcollections=getItemGroupsBySortedLocation(UserGroup)))
 
 # run the app.
 if __name__ == "__main__":

@@ -9,17 +9,17 @@
               <tbody>
     {% for location in itemcollections %}
                 <tr class="location">
-                  <th class="location" width="85%"> {{ location.name }} </th>
+                  <th class="location" width="85%"> {{ location[0] }} </th>
                   <th width="15%"> </th>
                 </tr>  
-      {% if location['items'] %}
-      {% for item in location['items'] %}
+      {% if location[1] %}
+      {% for item in location[1] %}
                 <tr>
                   <td><a href='choose_item_of_itemcollection'> 
-        {% if item.needed %}
-           +
+        {% if location[1][item]['ItemStatus']=='Needed' %}
+        +
         {% endif %}
-                          {{ item.name }} 
+                          {{ item }} 
                       </a></td>
                   <td> </td>
                 </tr>
