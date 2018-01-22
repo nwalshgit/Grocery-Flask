@@ -45,6 +45,9 @@ def getItemGroupsByLocation(UserGroup):
         for location in item['Locations']:
             #if location not in locations:  #TODO this should never happen, check that it doesnt 
             #    locations[location]={}
+            if location not in locations: #TODO we should never get here
+                print("DB inconsistency. location %s does not exist"%location)
+                continue
             if 'Items' not in locations[location]:
                 locations[location]['Items']={}
             if 'ItemStatus' not in item:
