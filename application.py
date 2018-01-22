@@ -1,6 +1,8 @@
 import boto3, json
-from flask import Flask, render_template
-import dynamoDB, GroceryDB
+import flask
+import dynamoDB
+import GroceryDB
+
 
 dynamodb = boto3.resource('dynamodb',region_name='us-east-2')
 tables = {'Items':dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Items','ID', GroceryDB.GroceryItem),
@@ -9,9 +11,8 @@ tables = {'Items':dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Items','ID'
           'Areas':dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Areas','ID', GroceryDB.GroceryArea),
          }
 
-def getLocationJSON(UserGroup):
-    '''{"ID":"Location - Area",} '''
-    location_dict = {}
+def getLocationsJSON(UserGroup):
+    ''' [{"ID":"xxx","Building":"xxx","Bay":"xxx"},] '''
     filter_expression = "UserGroup = :g"
     projection_expression = "ID, Building, Bay, SortOrder"
     expression_attribute_values = {':g': UserGroup}
@@ -19,12 +20,28 @@ def getLocationJSON(UserGroup):
     locations = tables['Areas'].scan(filter_expression, expression_attribute_values, 
                        projection_expression)
     #print("getLocationDict:",locations)
+    return(locations)
+
+def getLocationsDict(UserGroup):
+    '''{"ID":"Location - Area",} '''
+    location_dict = {}
+    locations=getLocationsJSON(UserGroup)
     for location in locations: #TODO sort by Building and then Order
         location_dict[location['ID']] = {'Building': location['Building'],
                                          'Bay': location['Bay'],
                                          'SortOrder': location['SortOrder']}
     #print("getLocationDict:",location_dict)
     return(location_dict)
+
+def getLocationsJSONSorted(UserGroup):
+    locations=[]
+    locationJSON=getLocationsJSON(UserGroup)
+    for item in sorted(locationJSON, key=lambda item: (item['Building'], item['SortOrder'], item['ID'])):
+        #if 'Items' not in value: value['Items']=[]
+        #locations.append(["%s - %s"%(value['Building'],value['Bay']),value['Items']])
+        locations.append(item)
+    return(locations)
+
 
 def getItemGroupsJSON(UserGroup):
     table=tables['Items']
@@ -39,7 +56,7 @@ def getItemGroupsJSON(UserGroup):
 def getItemGroupsByLocation(UserGroup):
     items=getItemGroupsJSON(UserGroup)
     #print("items:",items)
-    locations=getLocationJSON(UserGroup)
+    locations=getLocationsDict(UserGroup)
     #print("locations:",locations)
     for item in items:
         for location in item['Locations']:
@@ -93,7 +110,7 @@ home_link = '<p><a href="/">Back</a></p>\n'
 footer_text = '</body>\n</html>'
 
 # EB looks for an 'application' callable by default.
-application = Flask(__name__)
+application = flask.Flask(__name__)
 
 # add a rule for the index page.
 application.add_url_rule('/', 'index', (lambda: header_text +
@@ -109,9 +126,48 @@ def list_itemcollections_home():
     """list all of the itemcollections in home, grouped and sorted by area""" 
     UserGroup='nwalsh'
     current_user='nwalsh'
-    return(render_template('home/items.html',title='Planning', 
+    return(flask.render_template('home/items.html',title='Planning', 
                            current_user=current_user, UserGroup=UserGroup,
                            itemcollections=getItemGroupsBySortedLocation(UserGroup)))
+
+@application.route('/item', methods=['GET'])
+def add_item():
+    """Asks for form for new item"""
+    UserGroup='nwalsh'
+    current_user='nwalsh'
+    #print("add_item: Locations=",getLocationsJSONSorted(UserGroup))
+    return(flask.render_template('home/item.html',title='New Item',
+                           current_user=current_user, UserGroup=UserGroup,
+                           UNITS=GroceryDB.UNITS, ITEMSTATUS=GroceryDB.ITEMSTATUS,
+                           locations=getLocationsJSONSorted(UserGroup)))
+                           #locations=[{"ID":"010","Building":"BJ's","Bay":"Veggies and Fruits"},
+                           #           {"ID":"011","Building":"BJ's","Bay":"Deli Fish"}]))
+@application.route('/item', methods=['POST'])
+def save_item():
+    """Saves new item from form"""
+    current_user='nwalsh'
+    UserGroup='nwalsh' #TODO check if user is authorized for UserGroup
+    itemtable = dynamodb.Table('GroceryFlaskApp-WebEnv-Items')
+    itemtable.hash_key='ID'
+    Name = flask.request.form['Name']
+    PkgPrice = float(flask.request.form['PkgPrice'])
+    Size = float(flask.request.form['Size'])
+    Unit = flask.request.form['Unit']
+    print(UserGroup)
+    Locations = flask.request.form.getlist('Locations')
+    ItemGroup = flask.request.form['ItemGroup']
+    Manufacturer = flask.request.form['Manufacturer']
+    Taxable = flask.request.form['Taxable']
+    ItemStatus = flask.request.form['ItemStatus']
+    Home = flask.request.form['Home']
+    Barcode = flask.request.form['Barcode']
+    ListDate = flask.request.form['ListDate']
+    Fees = float(flask.request.form['Fees'])
+    print(PkgPrice)
+    #item=GroceryDB.GroceryItem.fromValues(itemtable,UserGroup,Name,PkgPrice,Size,Unit,Locations,ItemGroup,Manufacturer,Taxable,ItemStatus,ListDate,Home,Barcode,Fees)
+    #item.save()
+    return flask.redirect(flask.url_for('list_itemcollections_home'))
+    
 
 # run the app.
 if __name__ == "__main__":
