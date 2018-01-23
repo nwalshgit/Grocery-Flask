@@ -1,51 +1,28 @@
 <!-- app/templates/home/item.html -->
 
 {% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %}
 {% block title %}
             Add Item
 {% endblock %}
 {% block body %}
 <FORM ACTION="{{ url_for('add_item') }}" METHOD="POST">
-    <INPUT TYPE="hidden" NAME="UserGroup" VALUE="{{ UserGroup }}">
-    <HR>Home:
-        <INPUT TYPE="checkbox" NAME="Home"> checkbox
-    <BR>List Date:
-        <INPUT TYPE="text" NAME="ListDate"> text (only if not home)
-    <HR>
-    <BR>Barcode:
-        <INPUT TYPE="text" NAME="Barcode"> text
-    <BR>Name:
-        <INPUT TYPE="text" NAME="Name"> text
-    <BR>Manufacturer:
-        <INPUT TYPE="text" NAME="Manufacturer"> text
-    <BR>Item Group:
-        <INPUT TYPE="text" NAME="ItemGroup"> text
-    <BR>Package Price:
-        <INPUT TYPE="text" NAME="PkgPrice"> numeric (only if not home)
-    <BR>Size:
-        <INPUT TYPE="text" NAME="Size"> numeric
-        <SELECT NAME="Unit">
-            {% for option in UNITS %}
-            <OPTION value="{{ option }}">{{ option }}</OPTION>
-            {% endfor %}
-        </SELECT>
-    <BR>Locations:
-        <SELECT NAME="Locations" MULTIPLE> multi-check box
-            {% for option in locations %}
-            <OPTION value="{{ option['ID'] }}">{{ option['Building'] }} {{ option['Bay'] }}</OPTION>
-            {% endfor %}
-        </SELECT>
-    <HR>Taxable:
-        <INPUT TYPE="checkbox" NAME="Taxable"> checkbox
-    <BR>Fees:
-        <INPUT TYPE="text" NAME="Fees" VALUE=0.00> numeric
-    <BR>Item Status:
-        <SELECT NAME="ItemStatus">
-            <OPTION value="">Blank</OPTION>
-            {% for option in ITEMSTATUS %}
-            <OPTION value="{{ option }}">{{ option }}</OPTION>
-            {% endfor %}
-        </SELECT>
-    <BR><INPUT TYPE="submit">
+    <!--<INPUT TYPE="hidden" NAME="UserGroup" VALUE="{{ UserGroup }}">-->
+    {{ form.hidden_tag() }}
+    <TABLE>
+          {{ render_field(form.Home) }}
+          {{ render_field(form.ListDate) }}
+          {{ render_field(form.PkgPrice) }}
+          {{ render_field(form.Barcode) }}
+          {{ render_field(form.Name) }}
+          {{ render_field(form.Manufacturer) }}
+          {{ render_field(form.ItemGroup) }}
+          {{ render_field(form.Size) }}
+          {{ render_field(form.Unit) }}
+          {{ render_field(form.Locations) }}
+          {{ render_field(form.Taxable) }}
+          {{ render_field(form.ItemStatus) }}
+          {{ render_field(form.Fees) }}
+    </TABLE>{{ form.Submit() }}
 </FORM>
 {% endblock %}

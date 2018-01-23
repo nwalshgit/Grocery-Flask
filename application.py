@@ -1,15 +1,47 @@
-import boto3, json
+import boto3
+import json
+import decimal
+
 import flask
+import flask_wtf
+import wtforms
+
 import dynamoDB
 import GroceryDB
 
-
+#set as environment variable?
+#WTF_CSRF_SECRET_KEY = 'GroceryFlaskApp-WebEnv-fha7fle4g'
+#csrf = flask_wtf.csrf.CSRFProtect()
 dynamodb = boto3.resource('dynamodb',region_name='us-east-2')
 tables = {'Items':dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Items','ID', GroceryDB.GroceryItem),
           'Groups':dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Groups','ID', GroceryDB.GroceryGroup),
           'Users':dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Users','ID', GroceryDB.GroceryUser),
           'Areas':dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Areas','ID', GroceryDB.GroceryArea),
          }
+
+#class ItemForm(wtforms.Form): #This will clear your form each time, unless you initialize it
+class ItemForm(flask_wtf.FlaskForm):
+    #UserGroup = wtforms.HiddenField('UserGroup')
+    #user_name = wtforms.HiddenField('user_name')
+    uscurrency='^[\$]?[0-9]{1,3}(?:,?[0-9]{3})*(?:\.[0-9]{2})?$'
+    usdecimal='^[0-9]{1,3}(?:,?[0-9]{3})*(?:\.[0-9]+)?$'
+    Name = wtforms.StringField('Name', validators=[wtforms.validators.DataRequired()])
+    #PkgPrice = wtforms.StringField('PkgPrice', validators=[wtforms.validators.Regexp(uscurrency)])
+    PkgPrice = wtforms.DecimalField('PkgPrice', places=2)
+    Size = wtforms.DecimalField('Size', places=4)
+    Unit = wtforms.SelectField('Unit', validators=[wtforms.validators.DataRequired()], id="")
+    Locations = wtforms.SelectMultipleField('Locations', validators=[wtforms.validators.DataRequired()],default=[])
+    ItemGroup = wtforms.StringField('ItemGroup', validators=[wtforms.validators.DataRequired()])
+    Manufacturer = wtforms.StringField('Manufacturer', validators=[wtforms.validators.DataRequired()])
+    Taxable = wtforms.BooleanField('Taxable', validators=[wtforms.validators.Optional()])
+    ItemStatus = wtforms.SelectField('ItemStatus', validators=[wtforms.validators.Optional()], id="")
+    Home = wtforms.BooleanField('Home', validators=[wtforms.validators.Optional()])
+    Barcode = wtforms.StringField('Barcode', validators=[wtforms.validators.DataRequired()])
+    ListDate = wtforms.StringField('ListDate', validators=[wtforms.validators.Optional()])
+    #TODO make sure it is a valid list if chosen
+    Fees = wtforms.StringField('Fees', validators=[wtforms.validators.Optional()])
+    #Recaptcha = flask_wtf.RecaptchaField()
+    Submit = wtforms.SubmitField('Create')
 
 def getLocationsJSON(UserGroup):
     ''' [{"ID":"xxx","Building":"xxx","Bay":"xxx"},] '''
@@ -111,6 +143,12 @@ footer_text = '</body>\n</html>'
 
 # EB looks for an 'application' callable by default.
 application = flask.Flask(__name__)
+#csrf.init_app(application)
+application.config.update(dict(
+    SECRET_KEY = "GroceryApp-WebEnv-fha7f1e4g",
+    WTF_CSRF_SECRET_KEY = 'CSRF-fha7fle4g'
+))
+
 
 # add a rule for the index page.
 application.add_url_rule('/', 'index', (lambda: header_text +
@@ -130,44 +168,48 @@ def list_itemcollections_home():
                            current_user=current_user, UserGroup=UserGroup,
                            itemcollections=getItemGroupsBySortedLocation(UserGroup)))
 
-@application.route('/item', methods=['GET'])
+@application.route('/item', methods=['GET','POST'])
 def add_item():
-    """Asks for form for new item"""
+    """Asks for form for new item, Saves new item from form"""
     UserGroup='nwalsh'
     current_user='nwalsh'
     #print("add_item: Locations=",getLocationsJSONSorted(UserGroup))
+    form=ItemForm()
+    form.ItemStatus.choices = [('','Select a status...')]+[(value,value) for value in GroceryDB.ITEMSTATUS]
+    form.Unit.choices = [('','Select a unit...')]+[(value,value) for value in GroceryDB.UNITS]
+    form.Locations.choices = [(loc['ID'],loc['Building']+" - "+loc['Bay']) for loc in getLocationsJSONSorted(UserGroup)]
+    #form.unit.choices = [(unit,unit) for unit in Unit.query.all()]
+    flask.flash("validation: "+str(form.validate_on_submit()))
+    print(form.data)
+    if flask.request.method =="POST" and form.validate_on_submit():
+        print("Attempt to save item to Items Tables...")
+        itemtable = dynamodb.Table('GroceryFlaskApp-WebEnv-Items')
+        print(itemtable)
+        itemtable = dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Items','ID',GroceryDB.GroceryItem)
+        print(itemtable)
+        itemtable.hash_key='ID'
+        flask.flash("'"+form.Name.data+"' being created")
+        item=GroceryDB.GroceryItem.fromValues(
+                itemtable,UserGroup,
+                form.Name.data,
+                decimal.Decimal(form.PkgPrice.data),
+                decimal.Decimal(form.Size.data),
+                form.Unit.data,
+                form.Locations.data,
+                form.ItemGroup.data,
+                form.Manufacturer.data,
+                form.Taxable.data,
+                form.ItemStatus.data,
+                form.ListDate.data,
+                form.Home.data,
+                form.Barcode.data,
+                form.Fees.data)
+        item.save()
+        return(flask.redirect(flask.url_for('list_itemcollections_home')))
     return(flask.render_template('home/item.html',title='New Item',
                            current_user=current_user, UserGroup=UserGroup,
-                           UNITS=GroceryDB.UNITS, ITEMSTATUS=GroceryDB.ITEMSTATUS,
-                           locations=getLocationsJSONSorted(UserGroup)))
-                           #locations=[{"ID":"010","Building":"BJ's","Bay":"Veggies and Fruits"},
-                           #           {"ID":"011","Building":"BJ's","Bay":"Deli Fish"}]))
-@application.route('/item', methods=['POST'])
-def save_item():
-    """Saves new item from form"""
-    current_user='nwalsh'
-    UserGroup='nwalsh' #TODO check if user is authorized for UserGroup
-    itemtable = dynamodb.Table('GroceryFlaskApp-WebEnv-Items')
-    itemtable.hash_key='ID'
-    Name = flask.request.form['Name']
-    PkgPrice = float(flask.request.form['PkgPrice'])
-    Size = float(flask.request.form['Size'])
-    Unit = flask.request.form['Unit']
-    print(UserGroup)
-    Locations = flask.request.form.getlist('Locations')
-    ItemGroup = flask.request.form['ItemGroup']
-    Manufacturer = flask.request.form['Manufacturer']
-    Taxable = flask.request.form['Taxable']
-    ItemStatus = flask.request.form['ItemStatus']
-    Home = flask.request.form['Home']
-    Barcode = flask.request.form['Barcode']
-    ListDate = flask.request.form['ListDate']
-    Fees = float(flask.request.form['Fees'])
-    print(PkgPrice)
-    #item=GroceryDB.GroceryItem.fromValues(itemtable,UserGroup,Name,PkgPrice,Size,Unit,Locations,ItemGroup,Manufacturer,Taxable,ItemStatus,ListDate,Home,Barcode,Fees)
-    #item.save()
-    return flask.redirect(flask.url_for('list_itemcollections_home'))
-    
+                           form=form
+                           ))
 
 # run the app.
 if __name__ == "__main__":

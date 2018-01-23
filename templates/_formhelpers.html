@@ -1,0 +1,43 @@
+{% macro render_field(field) %}
+<TR><TD>{{ field.label }}</TD>
+<TD>{{ field(**kwargs)|safe }}</TD>
+  {% if field.errors %}
+    <TD>
+    {% for error in field.errors %}
+        {{ error }}<BR>
+    {% endfor %}
+    </TD>
+  {% endif %}
+{% endmacro %}
+
+{% macro render_select(field,options,dict=False,multiple=False) %}
+<TR><TD>{{ field.label }}</TD>
+<TD><SELECT NAME="{{ field.name }}"{% if multiple %} MULTIPLE{% endif %}>
+    {% for option in options %}
+        {% if dict %}
+        <OPTION value="{{ option['ID'] }}">{{ option['Building'] }}-{{ option['Bay'] }}</OPTION>
+            {% else %}
+        <OPTION value="{{ option }}">{{ option }}</OPTION>
+        {% endif %}
+    {% endfor %}
+    </SELECT></TD>
+    {% if field.errors %}
+    <TD>
+        {% for error in field.errors %}
+            {{ error }}<BR>
+        {% endfor %}
+    </TD>
+    {% endif %}
+{% endmacro %}
+
+{% macro render_checkbox(field) %}
+<TR><TD>{{ field.label }}</TD>
+    <TD><INPUT TYPE=checkbox NAME="{{ field.name }}">
+  {% if field.errors %}
+    <TD>
+    {% for error in field.errors %}
+        {{ error }}<BR>
+    {% endfor %}
+    </TD>
+  {% endif %}
+{% endmacro %}
