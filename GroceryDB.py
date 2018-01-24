@@ -1,4 +1,6 @@
-import decimal, uuid
+import decimal
+import uuid
+
 import dynamoDB
 
 UNITS={'mg':{},'g':{},'lb':{},'oz':{},'mL':{},'L':{},'gal':{},'floz':{},'ea':{},'dz':{},}
