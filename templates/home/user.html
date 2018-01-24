@@ -1,0 +1,30 @@
+<!-- aapp/templates/home/user.html -->
+
+{1% extends "base.html" %1}
+{% from "_formhelpers.html" import render_field %}
+{% block title %}
+            Add User
+{% endblock %}
+{% block body %}
+<FORM ACTION="{{ url_for('register_user') }}" METHOD="POST">
+    <!--<INPUT TYPE="hidden" NAME="UserGroup" VALUE="{{ UserGroup }}">-->
+    {{ form.hidden_tag() }}
+    <TABLE>
+          {{ render_field(form.Email) }}
+          {{ render_field(form.Phone) }}
+          {{ render_field(form.FirstName) }}
+          {{ render_field(form.LastName) }}
+          {{ render_field(form.Street) }}
+          {{ render_field(form.Town) }}
+          {{ render_field(form.State) }}
+          {{ render_field(form.Zipcode) }}
+          {{ render_field(form.Country) }}
+          {{ render_field(form.BirthDate) }}
+          {{ render_field(form.Password) }}
+          {{ render_field(form.ConfirmPassword) }}
+          {{ render_field(form.SecretQuestion) }}
+          {{ render_field(form.SecretAnswer) }}
+    </TABLE>{{ form.Submit() }}
+    <P>By continuing you agree to the <A HREF='{1{ url_for(terms_of_service) }1}'>terms of service</A>.</P>
+</FORM>
+{% endblock %}

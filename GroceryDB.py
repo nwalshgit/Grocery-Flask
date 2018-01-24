@@ -1,6 +1,8 @@
 import decimal
 import uuid
 
+import werkzeug
+
 import dynamoDB
 
 UNITS={'mg':{},'g':{},'lb':{},'oz':{},'mL':{},'L':{},'gal':{},'floz':{},'ea':{},'dz':{},}
@@ -97,7 +99,8 @@ class GroceryUser(dynamoDB.DynamoItem):
         assert('Zipcode' in data and isinstance(data['Zipcode'],str)) #TODO check if valid Zipcode
         assert('Country' in data and isinstance(data['Country'],str))
         assert('BirthDate' in data and isinstance(data['BirthDate'],str)) #TODO check if valid date
-        assert('Password' in data and isinstance(data['Password'],str))
+        #assert('Password' in data and isinstance(data['Password'],str))
+        assert('PasswordHash' in data and isinstance(data['PasswordHash'],str))
         assert('SecretQuestion' in data and isinstance(data['SecretQuestion'],str))
         assert('SecretAnswer' in data and isinstance(data['SecretAnswer'],str))
         if 'AgreedToTerms' in data:
@@ -118,7 +121,8 @@ class GroceryUser(dynamoDB.DynamoItem):
                 'Zipcode':Zipcode,
                 'Country': Country,
                 'BirthDate': BirthDate,
-                'Password': Password,  #TODO use encryption
+                #'Password': Password,  #TODO use encryption
+                'PasswordHash': werkzeug.security.generate_password_hash(Password),  #TODO use encryption
                 'SecretQuestion': SecretQuestion,
                 'SecretAnswer': SecretAnswer,
                }
@@ -139,6 +143,20 @@ class GroceryUser(dynamoDB.DynamoItem):
                 return(super().save())
             else:
                 return(None)
+    @property
+    def password(self):
+        """Prevent password from being accessed"""
+        raise AttributeError('password is not a readable attribute.')
+
+    @password.setter
+    def password(self, password):
+        """Set password to a hashed password"""
+        self.__data__['PasswordHash'] = werkzeug.security.generate_password_hash(password)
+
+    def verify_password(self, password):
+        """Check if hashed password matches actual password"""
+        return werkzeug.security.check_password_hash(self.__data__['PasswordHash'], password)
+        
 
 class GroceryGroup(dynamoDB.DynamoItem):
     def validate(self,data):
