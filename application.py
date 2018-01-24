@@ -9,9 +9,6 @@ import wtforms
 import dynamoDB
 import GroceryDB
 
-#set as environment variable?
-#WTF_CSRF_SECRET_KEY = 'GroceryFlaskApp-WebEnv-fha7fle4g'
-#csrf = flask_wtf.csrf.CSRFProtect()
 dynamodb = boto3.resource('dynamodb',region_name='us-east-2')
 tables = {'Items':dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Items','ID', GroceryDB.GroceryItem),
           'Groups':dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Groups','ID', GroceryDB.GroceryGroup),
@@ -126,33 +123,20 @@ def makeFirstList(Group='nwalsh'):
     for item in items:
         GroceryDB.GroceryList(tables['List'],Group,'0',item).save()
 
-# print a nice greeting.
-def say_hello(username = "World"):
-    #return(str(itemsToLocationDict(getItemCollections()))+'<p>Hello %s!</p>\n' % username)
-    return(str(getItemGroupsBySortedLocation('nwalsh'))+'<p>Hello %s!</p>\n' % username)
-
-# some bits of text for the page.
-header_text = '''
-    <html>\n<head> <title>Grocery List</title> </head>\n<body>'''
-instructions = '''
-    <p><em>Hint</em>: This is a RESTful web service! Append a location
-    to the URL (for example: <code>/BJs</code>) to GET details of that 
-    location.</p>\n'''
-home_link = '<p><a href="/">Back</a></p>\n'
-footer_text = '</body>\n</html>'
-
 # EB looks for an 'application' callable by default.
 application = flask.Flask(__name__)
 #csrf.init_app(application)
+#CSRF needs a secret key defined in the environment for it to work
 application.config.update(dict(
     SECRET_KEY = "GroceryApp-WebEnv-fha7f1e4g",
     WTF_CSRF_SECRET_KEY = 'CSRF-fha7fle4g'
 ))
 
 
-# add a rule for the index page.
-application.add_url_rule('/', 'index', (lambda: header_text +
-    say_hello() + instructions + footer_text))
+@application.route('/', methods=['GET'])
+def home():
+    """add a rule for the index page."""
+    return(flask.render_template('home/home.html',title='Home', current_user=current_user))
 
 # add a rule when the page is accessed with a location appended to the site
 # URL.
@@ -216,5 +200,4 @@ if __name__ == "__main__":
     # Setting debug to True enables debug output. This line should be
     # removed before deploying a production app.
     application.debug = True
-    application.run(port=5001)
-
+    application.run(host='0.0.0.0',port=5001)
