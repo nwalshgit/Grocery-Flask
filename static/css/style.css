@@ -20,7 +20,8 @@ a:hover, .navbar-default .navbar-brand:hover, .navbar-default .navbar-nav>li>a:h
 }
 
 footer {
-    padding: 50px 0;
+    margin: 80px 0;
+    padding: 20px 0;
     background-color: #f8f8f8;
 }
 
