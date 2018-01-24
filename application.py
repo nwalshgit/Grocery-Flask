@@ -144,7 +144,7 @@ def home():
 #    header_text + say_hello(location) + home_link + footer_text))
 
 @application.route('/planning', methods=['GET'])
-def list_itemcollections_home():
+def home_list():
     """list all of the itemcollections in home, grouped and sorted by area""" 
     UserGroup='nwalsh'
     current_user='nwalsh'
@@ -189,7 +189,7 @@ def add_item():
                 form.Barcode.data,
                 form.Fees.data)
         item.save()
-        return(flask.redirect(flask.url_for('list_itemcollections_home')))
+        return(flask.redirect(flask.url_for('home_list')))
     return(flask.render_template('home/item.html',title='New Item',
                            current_user=current_user, UserGroup=UserGroup,
                            form=form
