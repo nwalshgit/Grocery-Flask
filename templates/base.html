@@ -2,11 +2,11 @@
 
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <title>{{ title }} | Grocery Copyright Nathan Walsh 2018</title>
-    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
-</head>
+    <head>
+        <title>{{ title }} | Grocery</title>
+        <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+        <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+    </head>
     <body>
         <nav>
               <ul class="nav navbar-nav navbar-right">
@@ -23,9 +23,9 @@
                   <li><a href="{i{ url_for('auth.logout') }i}">Logout</a></li>
                   <li><a ><i class="fa fa-user"></i> Hi, {{ current_user.username }}!</a></li>
               {% else %}
-                  <li><a href="{i{ url_for('home.homepage') }i}">Home</a></li>
-                  <li><a href="{i{ url_for('auth.register') }i}">Register</a></li>
-                  <li><a href="{i{ url_for('auth.login') }i}">Login</a></li>
+                  <li><a href="{{ url_for('home') }}">Home</a></li>
+                  <li><a href="{{ url_for('register_user') }}">Register</a></li>
+                  <li><a href="{{ url_for('login') }}">Login</a></li>
               {% endif %}                 
               </ul>
         </nav>
