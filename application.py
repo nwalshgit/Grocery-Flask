@@ -5,7 +5,7 @@ import decimal
 import flask
 import flask_wtf
 import wtforms
-from flask_login import current_user, login_required, LoginManager
+from flask_login import current_user, login_required, LoginManager, login_user
 
 import dynamoDB
 import GroceryDB
@@ -195,14 +195,6 @@ def home():
     """add a rule for the index page."""
     return(flask.render_template('home/home.html',title='Home', current_user=current_user))
 
-#application.add_url_rule('/', 'index', (lambda: header_text +
-#    say_hello() + instructions + footer_text))
-
-# add a rule when the page is accessed with a location appended to the site
-# URL.
-#application.add_url_rule('/<location>', 'hello', (lambda location:
-#    header_text + say_hello(location) + home_link + footer_text))
-
 @application.route('/planning', methods=['GET'])
 @login_required
 def home_list():
@@ -312,7 +304,6 @@ def login():
     if form.validate_on_submit():
         #check if user and password match dataase
         flask.flash('TODO: finish password verification')
-        #usertable = dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Users','ID', GroceryUser)
         user = getUser(form.Email.data)
         print(user)
         if user is not None and user.verify_password(form.Password.data):
@@ -329,10 +320,10 @@ def login():
         #else:
         #   flask.flash('Invalid email or password')
 
-        #to prevent malicious users we must evaluate 'next' to make sure it is a safe url
+        #TODO: to prevent malicious sites and users we must evaluate 'next' to make sure it is a safe url
         next = flask.request.args.get('next')
-        if not is_safe_url(next):
-            return(flask.abort(400))
+        #if not is_safe_url(next):
+        #    return(flask.abort(400))
         return(flask.redirect(next or flask.url_for('home_list')))
     return(flask.render_template('home/login.html',form=form, title='Login'))
 
