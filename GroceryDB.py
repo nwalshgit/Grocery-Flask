@@ -157,6 +157,11 @@ class GroceryUser(dynamoDB.DynamoItem):
         """Check if hashed password matches actual password"""
         return werkzeug.security.check_password_hash(self.__data__['PasswordHash'], password)
         
+    def is_active(self):
+        return(self.AgreedToTerms and self.PhoneActive and self.EmailActive)
+
+    def get_id(self):
+        return(self.__data__['ID'])
 
 class GroceryGroup(dynamoDB.DynamoItem):
     def validate(self,data):
