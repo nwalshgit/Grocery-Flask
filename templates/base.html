@@ -9,10 +9,10 @@
     </head>
     <body>
         <nav>
-              <ul class="nav navbar-nav navbar-right">
+              <ul class="nav">
               {% if current_user.is_authenticated %}
                 {%if current_user.is_admin %}
-                  <li><a href="{i{ url_for('home.admin_dashboard') }i}">Dashboard</a></li>
+                  <li class="nav"><a href="{i{ url_for('home.admin_dashboard') }i}">Dashboard</a></li>
                   <li><a href="{i{ url_for('admin.list_departments') }i}">Departments</a></li>
                   <li><a href="{i{ url_for('admin.list_roles') }i}">Roles</a></li>
                   <li><a href="{i{ url_for('admin.list_employees') }i}">Employees</a></li>
@@ -20,8 +20,8 @@
                   <li><a href="{i{ url_for('home.planning') }i}">Dashboard</a></li>
                   <li><a href="{i{ url_for('home.shopping') }i}">Locations</a></li>
                 {% endif %}
-                  <li><a href="{i{ url_for('auth.logout') }i}">Logout</a></li>
-                  <li><a ><i class="fa fa-user"></i> Hi, {{ current_user.username }}!</a></li>
+                  <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                  <li><a ><i class="fa fa-user"></i> Hi, {{ current_user.get('FirstName') }}!</a></li>
               {% else %}
                   <li><a href="{{ url_for('home') }}">Home</a></li>
                   <li><a href="{{ url_for('register_user') }}">Register</a></li>
