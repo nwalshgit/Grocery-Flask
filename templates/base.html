@@ -8,8 +8,8 @@
         <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
     </head>
     <body>
-        <nav>
-              <ul class="nav">
+        <DIV CLASS="nav">
+              <ul CLASS="nav">
               {% if current_user.is_authenticated %}
                 {%if current_user.is_admin %}
                   <li class="nav"><a href="{i{ url_for('home.admin_dashboard') }i}">Dashboard</a></li>
@@ -20,18 +20,18 @@
                   <li><a href="{i{ url_for('home.planning') }i}">Dashboard</a></li>
                   <li><a href="{i{ url_for('home.shopping') }i}">Locations</a></li>
                 {% endif %}
-                  <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                  <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
                   <li><a ><i class="fa fa-user"></i> Hi, {{ current_user.get('FirstName') }}!</a></li>
               {% else %}
                   <li><a href="{{ url_for('home') }}">Home</a></li>
-                  <li><a href="{{ url_for('register_user') }}">Register</a></li>
-                  <li><a href="{{ url_for('login') }}">Login</a></li>
+                  <li><a href="{{ url_for('auth.register_user') }}">Register</a></li>
+                  <li><a href="{{ url_for('auth.login') }}">Login</a></li>
               {% endif %}                 
               </ul>
-        </nav>
+        </DIV>
 {% with messages = get_flashed_messages() %}
     {% if messages %}
-        <div>
+    <div CLASS="msg">
             <ul>
         {% for message in messages %}
                 <li>{{ message }}</li>
@@ -40,14 +40,12 @@
         </div>
     {% endif %}
 {% endwith %}
-        <div class="wrapper">
+        <div CLASS="page-wrap">
 {% block body %}
 {% endblock %}
         </div>
-        <footer>
-            <div>
+            <div CLASS="foot">
                 <p class="copyright text-muted small">Copyright Nathan Walsh © 2018. All Rights Reserved</p>
             </div>
-        </footer>
     </body>
 </html>

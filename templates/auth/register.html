@@ -1,12 +1,12 @@
 <!-- aapp/templates/home/user.html -->
 
-{1% extends "base.html" %1}
+{% extends "base.html" %}
 {% from "_formhelpers.html" import render_field %}
 {% block title %}
             Add User
 {% endblock %}
 {% block body %}
-<FORM ACTION="{{ url_for('register_user') }}" METHOD="POST">
+<FORM ACTION="{{ url_for('auth.register_user') }}" METHOD="POST">
     <!--<INPUT TYPE="hidden" NAME="UserGroup" VALUE="{{ UserGroup }}">-->
     {{ form.hidden_tag() }}
     <TABLE>

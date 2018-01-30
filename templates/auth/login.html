@@ -6,7 +6,7 @@
              Login
  {% endblock %}
  {% block body %}
- <FORM ACTION="{{ url_for('login') }}" METHOD="POST">
+ <FORM ACTION="{{ url_for('auth.login') }}" METHOD="POST">
      {{ form.hidden_tag() }}
      <TABLE>
            {{ render_field(form.Email) }}
