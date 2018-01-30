@@ -1,6 +1,7 @@
 import decimal
 import uuid
 
+import flask_login
 import werkzeug
 
 import dynamoDB
@@ -86,7 +87,7 @@ class GroceryArea(dynamoDB.DynamoItem):
                }
         return(GroceryArea(table,data))
 
-class GroceryUser(dynamoDB.DynamoItem):
+class GroceryUser(dynamoDB.DynamoItem, flask_login.UserMixin):
     def validate(self,data):
         super().validate(data)
         assert('Email' in data and isinstance(data['Email'],str))
@@ -121,7 +122,6 @@ class GroceryUser(dynamoDB.DynamoItem):
                 'Zipcode':Zipcode,
                 'Country': Country,
                 'BirthDate': BirthDate,
-                #'Password': Password,  #TODO use encryption
                 'PasswordHash': werkzeug.security.generate_password_hash(Password),  #TODO use encryption
                 'SecretQuestion': SecretQuestion,
                 'SecretAnswer': SecretAnswer,
@@ -143,15 +143,6 @@ class GroceryUser(dynamoDB.DynamoItem):
                 return(super().save())
             else:
                 return(None)
-    @property
-    def password(self):
-        """Prevent password from being accessed"""
-        raise AttributeError('password is not a readable attribute.')
-
-    @password.setter
-    def password(self, password):
-        """Set password to a hashed password"""
-        self.__data__['PasswordHash'] = werkzeug.security.generate_password_hash(password)
 
     def verify_password(self, password):
         """Check if hashed password matches actual password"""
@@ -162,6 +153,7 @@ class GroceryUser(dynamoDB.DynamoItem):
 
     def get_id(self):
         return(self.__data__['ID'])
+
 
 class GroceryGroup(dynamoDB.DynamoItem):
     def validate(self,data):
