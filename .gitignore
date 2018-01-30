@@ -1,6 +1,8 @@
 #Ignore python cache files
 __pycache__/
 
+#Private data strings, not to be included in git
+instance/config.py
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*

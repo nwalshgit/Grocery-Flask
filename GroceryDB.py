@@ -1,6 +1,9 @@
 import decimal
 import uuid
 
+import flask_login
+import werkzeug
+
 import dynamoDB
 
 UNITS={'mg':{},'g':{},'lb':{},'oz':{},'mL':{},'L':{},'gal':{},'floz':{},'ea':{},'dz':{},}
@@ -84,7 +87,7 @@ class GroceryArea(dynamoDB.DynamoItem):
                }
         return(GroceryArea(table,data))
 
-class GroceryUser(dynamoDB.DynamoItem):
+class GroceryUser(dynamoDB.DynamoItem, flask_login.UserMixin):
     def validate(self,data):
         super().validate(data)
         assert('Email' in data and isinstance(data['Email'],str))
@@ -97,7 +100,8 @@ class GroceryUser(dynamoDB.DynamoItem):
         assert('Zipcode' in data and isinstance(data['Zipcode'],str)) #TODO check if valid Zipcode
         assert('Country' in data and isinstance(data['Country'],str))
         assert('BirthDate' in data and isinstance(data['BirthDate'],str)) #TODO check if valid date
-        assert('Password' in data and isinstance(data['Password'],str))
+        #assert('Password' in data and isinstance(data['Password'],str))
+        assert('PasswordHash' in data and isinstance(data['PasswordHash'],str))
         assert('SecretQuestion' in data and isinstance(data['SecretQuestion'],str))
         assert('SecretAnswer' in data and isinstance(data['SecretAnswer'],str))
         if 'AgreedToTerms' in data:
@@ -118,7 +122,7 @@ class GroceryUser(dynamoDB.DynamoItem):
                 'Zipcode':Zipcode,
                 'Country': Country,
                 'BirthDate': BirthDate,
-                'Password': Password,  #TODO use encryption
+                'PasswordHash': werkzeug.security.generate_password_hash(Password),  #TODO use encryption
                 'SecretQuestion': SecretQuestion,
                 'SecretAnswer': SecretAnswer,
                }
@@ -139,6 +143,17 @@ class GroceryUser(dynamoDB.DynamoItem):
                 return(super().save())
             else:
                 return(None)
+
+    def verify_password(self, password):
+        """Check if hashed password matches actual password"""
+        return werkzeug.security.check_password_hash(self.__data__['PasswordHash'], password)
+        
+    def is_active(self):
+        return(self.AgreedToTerms and self.PhoneActive and self.EmailActive)
+
+    def get_id(self):
+        return(self.__data__['ID'])
+
 
 class GroceryGroup(dynamoDB.DynamoItem):
     def validate(self,data):

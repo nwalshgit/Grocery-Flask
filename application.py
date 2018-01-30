@@ -5,9 +5,16 @@ import decimal
 import flask
 import flask_wtf
 import wtforms
+from flask_login import current_user, login_required, LoginManager
 
 import dynamoDB
 import GroceryDB
+import auth.models
+from auth.models import auth, mail
+
+#CSRF needs a secret key defined in the environment for it to work
+#Mail server connection info needs to be present
+#export PRIVATE_FLASK_SETTINGS='instance/config.py'
 
 dynamodb = boto3.resource('dynamodb',region_name='us-east-2')
 tables = {'Items':dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Items','ID', GroceryDB.GroceryItem),
@@ -71,7 +78,6 @@ def getLocationsJSONSorted(UserGroup):
         locations.append(item)
     return(locations)
 
-
 def getItemGroupsJSON(UserGroup):
     table=tables['Items']
     filter_expression = "UserGroup = :g and NOT (ItemStatus = :s)"
@@ -125,38 +131,37 @@ def makeFirstList(Group='nwalsh'):
 
 # EB looks for an 'application' callable by default.
 application = flask.Flask(__name__)
-#csrf.init_app(application)
-#CSRF needs a secret key defined in the environment for it to work
-application.config.update(dict(
-    SECRET_KEY = "GroceryApp-WebEnv-fha7f1e4g",
-    WTF_CSRF_SECRET_KEY = 'CSRF-fha7fle4g'
-))
+application.config.from_envvar('PRIVATE_FLASK_SETTINGS')
+mail.init_app(application)
 
+#hook to allow auth (flask_login) to talk with application
+application.register_blueprint(auth)
+login_manager = LoginManager()
+login_manager.init_app(application)
+login_manager.login_view = "auth.login"
+@login_manager.user_loader
+def load_user(user_id):
+    return tables['Users'].get(user_id)
 
 @application.route('/', methods=['GET'])
 def home():
     """add a rule for the index page."""
     return(flask.render_template('home/home.html',title='Home', current_user=current_user))
 
-# add a rule when the page is accessed with a location appended to the site
-# URL.
-#application.add_url_rule('/<location>', 'hello', (lambda location:
-#    header_text + say_hello(location) + home_link + footer_text))
-
 @application.route('/planning', methods=['GET'])
+@login_required
 def home_list():
     """list all of the itemcollections in home, grouped and sorted by area""" 
     UserGroup='nwalsh'
-    current_user='nwalsh'
     return(flask.render_template('home/items.html',title='Planning', 
-                           current_user=current_user, UserGroup=UserGroup,
+                           UserGroup=UserGroup,
                            itemcollections=getItemGroupsBySortedLocation(UserGroup)))
 
 @application.route('/item', methods=['GET','POST'])
+@login_required
 def add_item():
     """Asks for form for new item, Saves new item from form"""
     UserGroup='nwalsh'
-    current_user='nwalsh'
     #print("add_item: Locations=",getLocationsJSONSorted(UserGroup))
     form=ItemForm()
     form.ItemStatus.choices = [('','Select a status...')]+[(value,value) for value in GroceryDB.ITEMSTATUS]
@@ -170,7 +175,7 @@ def add_item():
         itemtable = dynamodb.Table('GroceryFlaskApp-WebEnv-Items')
         print(itemtable)
         itemtable = dynamoDB.SimpleDynamoTable('GroceryFlaskApp-WebEnv-Items','ID',GroceryDB.GroceryItem)
-        print(itemtable)
+        print(itemtable) #TODO I DO NOT WANT TO CREATE TABLE HERE, rewrite to allow dynamodb.Table()
         itemtable.hash_key='ID'
         flask.flash("'"+form.Name.data+"' being created")
         item=GroceryDB.GroceryItem.fromValues(
@@ -191,7 +196,7 @@ def add_item():
         item.save()
         return(flask.redirect(flask.url_for('home_list')))
     return(flask.render_template('home/item.html',title='New Item',
-                           current_user=current_user, UserGroup=UserGroup,
+                           UserGroup=UserGroup,
                            form=form
                            ))
 
@@ -201,3 +206,4 @@ if __name__ == "__main__":
     # removed before deploying a production app.
     application.debug = True
     application.run(host='0.0.0.0',port=5001)
+

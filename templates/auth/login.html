@@ -1,0 +1,17 @@
+<!-- aapp/templates/home/login.html -->
+ 
+ {% extends "base.html" %}
+ {% from "_formhelpers.html" import render_field %}
+ {% block title %}
+             Login
+ {% endblock %}
+ {% block body %}
+ <FORM ACTION="{{ url_for('auth.login') }}" METHOD="POST">
+     {{ form.hidden_tag() }}
+     <TABLE>
+           {{ render_field(form.Email) }}
+           {{ render_field(form.Password) }}
+     </TABLE>{{ form.Submit() }}
+     <P>By continuing you agree to the <A HREF='{1{ url_for(terms_of_service) }1}'>terms of service</A>.</P>
+ </FORM>
+ {% endblock %} 
